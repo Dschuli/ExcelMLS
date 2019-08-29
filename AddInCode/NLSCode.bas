@@ -940,11 +940,17 @@ Sub SetLanguage()
     Dim modeChanged As Boolean
     Dim shape As shape
     Dim nlsKeyStatus As nlsKeyStatus
-    Dim wasFiltered As Boolean
+    Dim wasFiltered As Boolean, wasChanged As Boolean
     Dim filterArray As Variant
     Dim currentFiltRange As String
+    Dim nlsCellFunctions As Variant
+    Dim i As Long
     
     Call SetNLSData(force:=True)                                    'Safety
+    
+    Call SetSeparators
+    
+    nlsCellFunctions = Split(c_NLSCellFunctions, ",")
     
     Range("ActiveLanguage").Value = Range("SelectedLanguage").Value2
     
@@ -966,14 +972,29 @@ Sub SetLanguage()
                 wasFiltered = True
             End If
             
-            Set matchCell = .Find(what:="GetNLSText", LookIn:=xlFormulas, LookAt:=xlPart, MatchCase:=False)             'find all uses of getNLSText and mark as dirty
-            If Not matchCell Is Nothing Then
-                Set firstCell = matchCell
-                Do
-                    matchCell.Dirty
-                    Set matchCell = .FindNext(matchCell)
-                Loop While Not matchCell Is Nothing And Not matchCell.Address = firstCell.Address
-            End If
+            For i = 0 To UBound(nlsCellFunctions)
+            
+                Set matchCell = .Find(what:=nlsCellFunctions(i), LookIn:=xlFormulas, LookAt:=xlPart, MatchCase:=False)             'find all uses of getNLSText and mark as dirty
+                If Not matchCell Is Nothing Then
+                    Set firstCell = matchCell
+                    Do
+                        If sh.ProtectContents And matchCell.FormulaHidden Then
+                            wasChanged = True
+                            matchCell.FormulaHidden = False
+                        End If
+                        
+                        matchCell.Formula = matchCell.Formula
+                        
+                        If wasChanged Then
+                            matchCell.FormulaHidden = True
+                            wasChanged = True
+                        End If
+                                              
+                        Set matchCell = .FindNext(matchCell)
+                    Loop While Not matchCell Is Nothing And Not matchCell.Address = firstCell.Address
+                End If
+            
+            Next i
         
             If wasFiltered Then
                 Call RestoreAutofilter(sh, currentFiltRange, filterArray)

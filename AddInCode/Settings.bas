@@ -18,3 +18,5 @@ Public Const c_defaultColWidths As String = "40;85;100;60;40"   'Sets the column
 Public Const c_NlsSheetName As String = "NLS"                   'Names for the system sheets
 Public Const c_infoSheetName As String = "%info%"
 Public Const c_sortSheetname As String = "%sort%"
+
+Public Const c_NLSCellFunctions As String = "GetNlsText,IsYes,IsNo"

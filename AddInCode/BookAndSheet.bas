@@ -3,14 +3,14 @@ Option Explicit
 
 Sub BookOpen(Optional dummy As Boolean)
 
+    Call checkNamedReferencesToWorkbook(inBook:=ThisWorkbook)
+
+    Call SetLanguage
+
     Call checkAndCreateSystemSheets                                   'Check that some internally used sheets are present and create them if not
     
     Call setSheetProtectionToUserInterfaceOnly                        'Set the userInterfaceOnly protection parameter for all protected sheets
     
-    Call checkNamedReferencesToWorkbook(inBook:=ThisWorkbook)
-    
-    Call SetNLSData(force:=True)
-
 End Sub
 Sub BookActivate()
     
@@ -307,7 +307,11 @@ Function checkNamedReferencesToWorkbook(inBook As Workbook) As Boolean
                 Err.Clear
                 Set rg = nm.RefersToRange
                 If rg Is Nothing Then
-                    Call ShowMessage("System", "invalidReference", smSystemError, nm.Name, inBook.Name)
+                    If g_NLSData.isSet Then
+                        Call ShowMessage("System", "invalidReference", smSystemError, , inBook.Name)
+                    Else
+                        MsgBox "Fatal Error. Invalid reference to range <" & nm.Name & "> in workbook <" & inBook.Name & ">. . Pls. do not proceed and contact the developer.", vbCritical + vbOKOnly, "Fatal Error"
+                    End If
                 End If
             End If
         End If
